@@ -1,2 +1,7 @@
 # Unity_GFTools
 UnityGameFrameWork Custom Tools
+
+2025年11月27日
+【新增】新增编辑器模式读取配置表功能
+
+【新增】本地化编辑器添加JSON格式读写功能
