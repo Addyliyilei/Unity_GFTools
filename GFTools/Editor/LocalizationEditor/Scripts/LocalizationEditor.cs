@@ -8,7 +8,7 @@ using System.IO;
 using UnityGameFramework.Runtime;
 using GameFramework;
 
-namespace UnityGameFramework.Editor.LocalizationEditor
+namespace GFTools.LocalizationEditor
 {
     [System.Serializable]
     public class LocalizationEntry
@@ -29,13 +29,13 @@ namespace UnityGameFramework.Editor.LocalizationEditor
         public const float WindowHeight = 680;
         public const Language DefaultLanguage = Language.English;
         /// <summary>
-        /// ÎÄ¼ş¼ĞµØÖ·
+        /// æ–‡ä»¶å¤¹åœ°å€
         /// </summary>
         private string folderPath = "Assets/GameMain/Localization/";
 
         private string m_DefaultFilePath = "/Dictionaries/Default.xml";
         /// <summary>
-        /// ÓïÑÔÀàĞÍÁĞ±í
+        /// è¯­è¨€ç±»å‹åˆ—è¡¨
         /// </summary>
         private List<string> m_LanguageTypeList;
         private ReorderableList reorderableLanguageList;
@@ -53,33 +53,33 @@ namespace UnityGameFramework.Editor.LocalizationEditor
         }
         private int m_selectLanguageIndex = 0;
         /// <summary>
-        /// ¼üÖµ¶Ô
+        /// é”®å€¼å¯¹
         /// </summary>
         private Dictionary<string, string> m_KeyValuePairs;
         /// <summary>
-        /// ¼üÖµ¶ÔÌõÄ¿ÁĞ±í ±ãÓÚĞŞ¸Ä
+        /// é”®å€¼å¯¹æ¡ç›®åˆ—è¡¨ ä¾¿äºä¿®æ”¹
         /// </summary>
         private List<LocalizationEntry> m_CurEntryList = new List<LocalizationEntry>();
         /// <summary>
-        /// ´æ´¢ÒÑÌí¼ÓÓïÑÔµÄ±¾µØ»¯ÌõÄ¿
+        /// å­˜å‚¨å·²æ·»åŠ è¯­è¨€çš„æœ¬åœ°åŒ–æ¡ç›®
         /// </summary>
         private Dictionary<string, List<LocalizationEntry>> m_AllLangguageLocalitionEntry = new Dictionary<string, List<LocalizationEntry>>();
         private ReorderableList m_ReorderableEntryList;
      
-        private GUIStyle _evenRowStyle;  //Å¼ÊıĞĞ
-        private GUIStyle _oddRowStyle;   //ÆæÊıĞĞ
+        private GUIStyle _evenRowStyle;  //å¶æ•°è¡Œ
+        private GUIStyle _oddRowStyle;   //å¥‡æ•°è¡Œ
 
 
         private Vector2 m_EntryScrollPos;
         private Vector2 m_LanguageListScrollPos;
 
-        [MenuItem("Game Framework/¶àÓïÑÔ±à¼­Æ÷")]
+        [MenuItem("Game Framework/å¤šè¯­è¨€ç¼–è¾‘å™¨")]
         public static void ShowWindow()
         {
-            var window = GetWindow<LocalizationEditor>("¶àÓïÑÔ±à¼­Æ÷");
-            window.minSize = new Vector2(WindowWidth, WindowHeight); // ¿ÉÑ¡£ºÉèÖÃ×îĞ¡³ß´ç
+            var window = GetWindow<LocalizationEditor>("å¤šè¯­è¨€ç¼–è¾‘å™¨");
+            window.minSize = new Vector2(WindowWidth, WindowHeight); // å¯é€‰ï¼šè®¾ç½®æœ€å°å°ºå¯¸
             Rect main = EditorGUIUtility.GetMainWindowPosition();
-            // ¼ÆËã¾ÓÖĞÎ»ÖÃ
+            // è®¡ç®—å±…ä¸­ä½ç½®
             float posX = main.x + (main.width - WindowWidth) / 2;
             float posY = main.y + (main.height - WindowHeight) / 2;
 
@@ -87,7 +87,7 @@ namespace UnityGameFramework.Editor.LocalizationEditor
             string iconPath = LocalizationUtility.GetIconPath(window);
 
             Texture2D icon = AssetDatabase.LoadAssetAtPath<Texture2D>(iconPath);
-            window.titleContent = new GUIContent(" ±¾µØ»¯±à¼­Æ÷", icon, "Localization Editor");
+            window.titleContent = new GUIContent(" æœ¬åœ°åŒ–ç¼–è¾‘å™¨", icon, "Localization Editor");
         }
 
         private void OnEnable()
@@ -122,7 +122,7 @@ namespace UnityGameFramework.Editor.LocalizationEditor
                     normal = { textColor = Color.green }
                 };
 
-                GUILayout.Label(new GUIContent("¶àÓïÑÔÎÄ¼ş¼ĞÂ·¾¶(?)", "eg:Assets/GameMain/Localization/"), labelStyle, GUILayout.Width(200));
+                GUILayout.Label(new GUIContent("å¤šè¯­è¨€æ–‡ä»¶å¤¹è·¯å¾„(?)", "eg:Assets/GameMain/Localization/"), labelStyle, GUILayout.Width(200));
                 folderPath = EditorGUILayout.TextField(folderPath);
             }
             EditorGUILayout.EndHorizontal();
@@ -134,7 +134,7 @@ namespace UnityGameFramework.Editor.LocalizationEditor
                     fontStyle = FontStyle.Bold
                 };
 
-                GUILayout.Label(new GUIContent("ÎÄ¼ş±£´æÂ·¾¶(?)", "eg:/Dictionaries/Default.xml"), labelStyle, GUILayout.Width(200));
+                GUILayout.Label(new GUIContent("æ–‡ä»¶ä¿å­˜è·¯å¾„(?)", "eg:/Dictionaries/Default.xml"), labelStyle, GUILayout.Width(200));
                 m_DefaultFilePath = EditorGUILayout.TextField(m_DefaultFilePath);
             }
             EditorGUILayout.EndHorizontal();
@@ -148,28 +148,28 @@ namespace UnityGameFramework.Editor.LocalizationEditor
         }
 
         /// <summary>
-        /// »æÖÆµ×²¿°´Å¥
+        /// ç»˜åˆ¶åº•éƒ¨æŒ‰é’®
         /// </summary>
         private void DrawBottomButton()
         {
 
-            // 2. Õ¼¾İÊ£Óà¿Õ¼ä£¬½«°´Å¥ÍÆµ½µ×²¿
+            // 2. å æ®å‰©ä½™ç©ºé—´ï¼Œå°†æŒ‰é’®æ¨åˆ°åº•éƒ¨
             GUILayout.FlexibleSpace();
 
-            // 3. ¹Ì¶¨ÔÚµ×²¿µÄ±£´æ°´Å¥ÇøÓò
+            // 3. å›ºå®šåœ¨åº•éƒ¨çš„ä¿å­˜æŒ‰é’®åŒºåŸŸ
             EditorGUILayout.BeginHorizontal("box");
             GUILayout.FlexibleSpace();
 
           
-            if (GUILayout.Button("±£´æµ±Ç°", GUILayout.Width(100), GUILayout.Height(30)))
+            if (GUILayout.Button("ä¿å­˜å½“å‰", GUILayout.Width(100), GUILayout.Height(30)))
             {
                 SaveToDictionary();
             }
-            if (GUILayout.Button("±£´æÈ«²¿", GUILayout.Width(100), GUILayout.Height(30)))
+            if (GUILayout.Button("ä¿å­˜å…¨éƒ¨", GUILayout.Width(100), GUILayout.Height(30)))
             {
                 SaveAll();
             }
-            if (GUILayout.Button(new GUIContent("Í¬²½ËùÓĞ¹Ø¼ü´Ê(?)", "½«µ±Ç°¹Ø¼ü´ÊÁĞ±íÓ¦ÓÃµ½ËùÓĞÓïÑÔÎÄ¼ş"), GUILayout.Width(120), GUILayout.Height(30)))
+            if (GUILayout.Button(new GUIContent("åŒæ­¥æ‰€æœ‰å…³é”®è¯(?)", "å°†å½“å‰å…³é”®è¯åˆ—è¡¨åº”ç”¨åˆ°æ‰€æœ‰è¯­è¨€æ–‡ä»¶"), GUILayout.Width(120), GUILayout.Height(30)))
             {
                 SyncAllKeycodes();
             }
@@ -178,13 +178,13 @@ namespace UnityGameFramework.Editor.LocalizationEditor
             EditorGUILayout.EndHorizontal();
         }
         /// <summary>
-        /// »æÖÆÓïÑÔÑ¡ÔñÏÂÀ­¿ò
+        /// ç»˜åˆ¶è¯­è¨€é€‰æ‹©ä¸‹æ‹‰æ¡†
         /// </summary>
         private void DrawLanguagePopup()
         {
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal("box");
-            EditorGUILayout.LabelField("Ñ¡ÔñÓïÑÔ£º", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("é€‰æ‹©è¯­è¨€ï¼š", EditorStyles.boldLabel);
             int newIndex = EditorGUILayout.Popup(m_selectLanguageIndex, m_LanguageTypeList.ToArray(), GUILayout.Width(300f));
 
             if(newIndex !=  m_selectLanguageIndex)
@@ -196,13 +196,13 @@ namespace UnityGameFramework.Editor.LocalizationEditor
             EditorGUILayout.EndHorizontal();
         }
         /// <summary>
-        /// »æÖÆ´ÊÌõÁĞ±í
+        /// ç»˜åˆ¶è¯æ¡åˆ—è¡¨
         /// </summary>
         private void DrawLocalizationEntry()
         {
             if (m_ReorderableEntryList != null)
             {
-                EditorGUILayout.LabelField("±¾µØ»¯´ÊÌõÁĞ±í", EditorStyles.boldLabel);
+                EditorGUILayout.LabelField("æœ¬åœ°åŒ–è¯æ¡åˆ—è¡¨", EditorStyles.boldLabel);
 
                 m_EntryScrollPos = EditorGUILayout.BeginScrollView(m_EntryScrollPos, GUILayout.Height(380f));
                 m_ReorderableEntryList.DoLayoutList();
@@ -210,7 +210,7 @@ namespace UnityGameFramework.Editor.LocalizationEditor
             }
         }
         /// <summary>
-        /// »æÖÆÓïÑÔÀàĞÍÁĞ±í
+        /// ç»˜åˆ¶è¯­è¨€ç±»å‹åˆ—è¡¨
         /// </summary>
         private void DrawLanguageTypeList()
         {
@@ -224,7 +224,7 @@ namespace UnityGameFramework.Editor.LocalizationEditor
         }
 
         /// <summary>
-        /// ¼ÓÔØÖ¸¶¨ÓïÑÔµÄ±¾µØ»¯´ÊÌõ
+        /// åŠ è½½æŒ‡å®šè¯­è¨€çš„æœ¬åœ°åŒ–è¯æ¡
         /// </summary>
         /// <param name="language"></param>
         private List<LocalizationEntry> LoadLocalizationEntry(string language)
@@ -233,7 +233,7 @@ namespace UnityGameFramework.Editor.LocalizationEditor
             List<LocalizationEntry> localizationEntries = new List<LocalizationEntry>();
             if (string.IsNullOrEmpty(folderPath))
             {
-                Debug.LogWarning("Â·¾¶Îª¿Õ£¬ÎŞ·¨¼ÓÔØÎÄ¼ş¡£");
+                Debug.LogWarning("è·¯å¾„ä¸ºç©ºï¼Œæ— æ³•åŠ è½½æ–‡ä»¶ã€‚");
                 return null;
             }
             string fullPath = folderPath + language + m_DefaultFilePath;
@@ -252,7 +252,7 @@ namespace UnityGameFramework.Editor.LocalizationEditor
         }
 
         /// <summary>
-        /// ³õÊ¼»¯¿ÉÖØÅÅĞòµÄ±¾µØ»¯´ÊÌõÁĞ±í
+        /// åˆå§‹åŒ–å¯é‡æ’åºçš„æœ¬åœ°åŒ–è¯æ¡åˆ—è¡¨
         /// </summary>
         private void InitReorderableEntryList()
         {
@@ -273,7 +273,7 @@ namespace UnityGameFramework.Editor.LocalizationEditor
                     padding = new RectOffset(4, 4, 2, 2)
                 };
 
-                EditorGUI.LabelField(new Rect(x, y, labelWidth - padding, EditorGUIUtility.singleLineHeight), "ĞòºÅ",headerStyle);
+                EditorGUI.LabelField(new Rect(x, y, labelWidth - padding, EditorGUIUtility.singleLineHeight), "åºå·",headerStyle);
                 x += labelWidth;
 
                 EditorGUI.LabelField(new Rect(x + padding, y, keyWidth, EditorGUIUtility.singleLineHeight), "Key", headerStyle);
@@ -295,20 +295,20 @@ namespace UnityGameFramework.Editor.LocalizationEditor
 
                 float y = rect.y + 2;
 
-                // ÏÔÊ¾ĞòºÅ
+                // æ˜¾ç¤ºåºå·
                 EditorGUI.LabelField(
                     new Rect(rect.x + padding, y, labelWidth - padding, EditorGUIUtility.singleLineHeight),
                     (index + 1).ToString(),
                     EditorStyles.miniButtonLeft
                 );
 
-                // ÊäÈë Key
+                // è¾“å…¥ Key
                 entry.Key = EditorGUI.TextField(
                     new Rect(rect.x + labelWidth + padding, y, keyWidth, EditorGUIUtility.singleLineHeight),
                     entry.Key
                 );
 
-                // ÊäÈë Value
+                // è¾“å…¥ Value
                 entry.Value = EditorGUI.TextField(
                     new Rect(rect.x + labelWidth + keyWidth + padding * 2, y, valueWidth, EditorGUIUtility.singleLineHeight),
                     entry.Value
@@ -323,7 +323,7 @@ namespace UnityGameFramework.Editor.LocalizationEditor
         }
 
         /// <summary>
-        /// ³õÊ¼»¯ÑùÊ½
+        /// åˆå§‹åŒ–æ ·å¼
         /// </summary>
         private void InitLanguageLabelStyles()
         {
@@ -352,7 +352,7 @@ namespace UnityGameFramework.Editor.LocalizationEditor
             }
         }
         /// <summary>
-        /// Ìí¼Ó±¾µØ»¯´ÊÌõ»Øµ÷
+        /// æ·»åŠ æœ¬åœ°åŒ–è¯æ¡å›è°ƒ
         /// </summary>
         /// <param name="list"></param>
         private void OnAddEntryCallback(ReorderableList list)
@@ -361,7 +361,7 @@ namespace UnityGameFramework.Editor.LocalizationEditor
             {
                 string lang = m_LanguageTypeList[i];
                 var entryList = m_AllLangguageLocalitionEntry[m_LanguageTypeList[i]];
-                // ×¢²á³·Ïúµã
+                // æ³¨å†Œæ’¤é”€ç‚¹
                 Undo.RecordObject(this, $"Add Entry to {lang}");
                 entryList.Add(new LocalizationEntry("NewKey", "NewValue"));
 
@@ -369,7 +369,7 @@ namespace UnityGameFramework.Editor.LocalizationEditor
             }
         }
         /// <summary>
-        /// ÒÆ³ı±¾µØ»¯´ÊÌõ»Øµ÷
+        /// ç§»é™¤æœ¬åœ°åŒ–è¯æ¡å›è°ƒ
         /// </summary>
         /// <param name="list"></param>
         private void OnRemoveCallBack(ReorderableList list)
@@ -384,7 +384,7 @@ namespace UnityGameFramework.Editor.LocalizationEditor
             {
                 string lang = m_LanguageTypeList[i];
                 var entryList = m_AllLangguageLocalitionEntry[m_LanguageTypeList[i]];
-                // ×¢²á³·Ïúµã
+                // æ³¨å†Œæ’¤é”€ç‚¹
                 Undo.RecordObject(this, $"Remove Entry from {lang}");
                 entryList.RemoveAt(index);
                 EditorUtility.SetDirty(this);
@@ -393,7 +393,7 @@ namespace UnityGameFramework.Editor.LocalizationEditor
         }
 
         /// <summary>
-        /// ¶ÁÈ¡ÓïÑÔÀàĞÍÁĞ±í¡¢²¢³õÊ¼»¯¿ÉÖØÅÅĞòÁĞ±í
+        /// è¯»å–è¯­è¨€ç±»å‹åˆ—è¡¨ã€å¹¶åˆå§‹åŒ–å¯é‡æ’åºåˆ—è¡¨
         /// </summary>
         private void LoadLanguageTypeList()
         {
@@ -406,13 +406,13 @@ namespace UnityGameFramework.Editor.LocalizationEditor
             reorderableLanguageList.draggable = false;
             reorderableLanguageList.drawHeaderCallback = (Rect rect) =>
             {
-                EditorGUI.LabelField(rect, "ÓïÑÔÀàĞÍÁĞ±í",EditorStyles.boldLabel);
+                EditorGUI.LabelField(rect, "è¯­è¨€ç±»å‹åˆ—è¡¨",EditorStyles.boldLabel);
             };
 
 
             reorderableLanguageList.drawElementCallback = (Rect rect, int index, bool isActive, bool isFocused) =>
             {
-                InitLanguageLabelStyles(); // È·±£ÑùÊ½ÒÑ³õÊ¼»¯
+                InitLanguageLabelStyles(); // ç¡®ä¿æ ·å¼å·²åˆå§‹åŒ–
 
                 var style = index % 2 == 0 ? _evenRowStyle : _oddRowStyle; ;
                 EditorGUI.LabelField(
@@ -443,7 +443,7 @@ namespace UnityGameFramework.Editor.LocalizationEditor
                     }
                 }
 
-                // ÏÔÊ¾ÏÂÀ­²Ëµ¥
+                // æ˜¾ç¤ºä¸‹æ‹‰èœå•
                 menu.ShowAsContext();
 
             };
@@ -459,7 +459,7 @@ namespace UnityGameFramework.Editor.LocalizationEditor
         }
      
         /// <summary>
-        /// ÏÂÀ­¿òÖµĞŞ¸ÄÊÂ¼ş
+        /// ä¸‹æ‹‰æ¡†å€¼ä¿®æ”¹äº‹ä»¶
         /// </summary>
         /// <param name="index"></param>
         private void OnPopupLanguageChange(int index)
@@ -469,7 +469,7 @@ namespace UnityGameFramework.Editor.LocalizationEditor
         }
 
         /// <summary>
-        /// Í¬²½
+        /// åŒæ­¥
         /// </summary>
         private void SyncAllKeycodes()
         {
@@ -490,7 +490,7 @@ namespace UnityGameFramework.Editor.LocalizationEditor
                         }
                         
                     }
-                    Debug.Log(lang + "£º" + fixCount + "¸öÒÑĞŞ¸Ä");
+                    Debug.Log(lang + "ï¼š" + fixCount + "ä¸ªå·²ä¿®æ”¹");
                 }
                
             }
@@ -498,7 +498,7 @@ namespace UnityGameFramework.Editor.LocalizationEditor
         }
 
         /// <summary>
-        /// ±£´æµ±Ç°±¾µØ»¯ÎÄ¼ş
+        /// ä¿å­˜å½“å‰æœ¬åœ°åŒ–æ–‡ä»¶
         /// </summary>
         private void SaveToDictionary()
         {
@@ -511,7 +511,7 @@ namespace UnityGameFramework.Editor.LocalizationEditor
                     if (!m_KeyValuePairs.ContainsKey(entry.Key))
                         m_KeyValuePairs.Add(entry.Key, entry.Value);
                     else
-                        Debug.LogWarning($"ÖØ¸´µÄ Key£º{entry.Key}£¬ÒÑÌø¹ı¡£");
+                        Debug.LogWarning($"é‡å¤çš„ Keyï¼š{entry.Key}ï¼Œå·²è·³è¿‡ã€‚");
                 }
             }
             string fullPath = folderPath + m_CurLanguage + m_DefaultFilePath;
@@ -521,7 +521,7 @@ namespace UnityGameFramework.Editor.LocalizationEditor
         }
 
         /// <summary>
-        /// ±£´æÖ¸¶¨ÓïÑÔµÄ±¾µØ»¯ÎÄ¼ş
+        /// ä¿å­˜æŒ‡å®šè¯­è¨€çš„æœ¬åœ°åŒ–æ–‡ä»¶
         /// </summary>
         /// <param name="language"></param>
         private void SaveToDictionary(string language)
@@ -535,7 +535,7 @@ namespace UnityGameFramework.Editor.LocalizationEditor
                     if (!keyValuePairs.ContainsKey(entry.Key))
                         keyValuePairs.Add(entry.Key, entry.Value);
                     else
-                        Debug.LogWarning($"ÖØ¸´µÄ Key£º{entry.Key}£¬ÒÑÌø¹ı¡£");
+                        Debug.LogWarning($"é‡å¤çš„ Keyï¼š{entry.Key}ï¼Œå·²è·³è¿‡ã€‚");
                 }
             }
             string fullPath = folderPath + language + m_DefaultFilePath;
@@ -545,7 +545,7 @@ namespace UnityGameFramework.Editor.LocalizationEditor
         }
 
         /// <summary>
-        /// È«²¿±£´æ
+        /// å…¨éƒ¨ä¿å­˜
         /// </summary>
         private void SaveAll()
         {
@@ -558,7 +558,7 @@ namespace UnityGameFramework.Editor.LocalizationEditor
         }
 
         /// <summary>
-        /// Ìí¼ÓĞÂÓïÑÔ´ÊÌõ¼¯
+        /// æ·»åŠ æ–°è¯­è¨€è¯æ¡é›†
         /// </summary>
         /// <returns></returns>
         private List<LocalizationEntry> AddNewLocalizationEntryList()
@@ -573,3 +573,4 @@ namespace UnityGameFramework.Editor.LocalizationEditor
     }
 
 }
+
