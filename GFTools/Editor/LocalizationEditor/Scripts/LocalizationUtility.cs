@@ -7,7 +7,7 @@ using System.Xml;
 using UnityEditor;
 using UnityEngine;
 
-namespace UnityGameFramework.Editor.LocalizationEditor
+namespace GFTools.LocalizationEditor
 {
     public static class LocalizationUtility
     {
@@ -217,3 +217,4 @@ namespace UnityGameFramework.Editor.LocalizationEditor
 
     }
 }
+
