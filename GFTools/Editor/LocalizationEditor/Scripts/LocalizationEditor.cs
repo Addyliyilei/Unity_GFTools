@@ -1,12 +1,12 @@
+
 using GameFramework.Localization;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEditor;
-using UnityEngine;
-using UnityEditorInternal;
 using System.IO;
-using UnityGameFramework.Runtime;
-using GameFramework;
+using UnityEditor;
+using UnityEditorInternal;
+using UnityEngine;
+using Language = GameFramework.Localization.Language;
 
 namespace GFTools.LocalizationEditor
 {
@@ -15,25 +15,42 @@ namespace GFTools.LocalizationEditor
     {
         public string Key;
         public string Value;
-
+        /// <summary>
+        /// 本地化词条对象
+        /// </summary>
+        /// <param name="key"> 键 </param>
+        /// <param name="value"> 值 </param>
         public LocalizationEntry(string key, string value)
         {
             Key = key;
             Value = value;
         }
+
+        public LocalizationEntry()
+        {
+
+        }
     }
+
+    public enum FileType
+    {
+        Xml,
+        Json,
+    }
+   
 
     public class LocalizationEditor : EditorWindow
     {
         public const float WindowWidth = 700;
-        public const float WindowHeight = 680;
-        public const Language DefaultLanguage = Language.English;
+        public const float WindowHeight = 720;
         /// <summary>
         /// 文件夹地址
         /// </summary>
         private string folderPath = "Assets/GameMain/Localization/";
 
-        private string m_DefaultFilePath = "/Dictionaries/Default.xml";
+        private string m_FilePath = "English";
+
+        private FileType m_FileType = FileType.Xml;
         /// <summary>
         /// 语言类型列表
         /// </summary>
@@ -48,9 +65,45 @@ namespace GFTools.LocalizationEditor
                 if(m_CurLanguage != value)
                 {
                     m_CurLanguage = value;
+                   // Debug.Log("Selected: " + value);
                 }
             }
         }
+
+        /// <summary>
+        /// 允许拖拽排序
+        /// </summary>
+        public bool AllowDrag 
+        { 
+            get => EditorPrefs.GetBool("AllowDrag", false);
+            set => EditorPrefs.SetBool("AllowDrag", value);
+        
+        }
+        /// <summary>
+        /// 关闭时保存
+        /// </summary>
+        public bool SaveWhenClosed 
+        { 
+            get => EditorPrefs.GetBool("SaveWhenClosed", true);
+            set => EditorPrefs.SetBool("SaveWhenClosed", value);
+        }
+        public int SelectLanguageIndex 
+        { 
+            get
+            {
+                m_selectLanguageIndex = EditorPrefs.GetInt("SelectLanguageIndex", 0);
+                return m_selectLanguageIndex;
+            }
+
+            set
+            {
+                m_selectLanguageIndex = value;
+                EditorPrefs.SetInt("SelectLanguageIndex", m_selectLanguageIndex);
+            }
+        }
+        /// <summary>
+        /// 当前选择的语言索引
+        /// </summary>
         private int m_selectLanguageIndex = 0;
         /// <summary>
         /// 键值对
@@ -69,6 +122,8 @@ namespace GFTools.LocalizationEditor
         private GUIStyle _evenRowStyle;  //偶数行
         private GUIStyle _oddRowStyle;   //奇数行
 
+        private bool m_SaveWhenClosed = true;
+        private bool m_AllowDrag = false;
 
         private Vector2 m_EntryScrollPos;
         private Vector2 m_LanguageListScrollPos;
@@ -93,51 +148,49 @@ namespace GFTools.LocalizationEditor
         private void OnEnable()
         {
             LoadLanguageTypeList();
-
-            m_CurLanguage = DefaultLanguage.ToString();
-            m_selectLanguageIndex = m_LanguageTypeList.IndexOf(m_CurLanguage);
             for (int i = 0; i < m_LanguageTypeList.Count; i++)
             {
                var localEntry = LoadLocalizationEntry(m_LanguageTypeList[i]);
-                if (localEntry != null && i == m_selectLanguageIndex)
+                if (localEntry != null && i == 0)
                 {
                     m_CurEntryList = localEntry;
                 }
-
+             
             }
             InitReorderableEntryList();
            
         }
 
-
+        private void OnDisable()
+        {
+            Debug.Log("关闭");
+            if(SaveWhenClosed)
+                SaveAll();
+        }
 
         private void OnGUI()
         {
+            GUIStyle labelStyle = new GUIStyle(GUI.skin.label)
+            {
+                fontSize = 12,
+                fontStyle = FontStyle.Bold,
+                normal = { textColor = Color.green }
+            };
             EditorGUILayout.BeginHorizontal();
             {
-                GUIStyle labelStyle = new GUIStyle(GUI.skin.label)
-                {
-                    fontSize = 12,
-                    fontStyle = FontStyle.Bold,
-                    normal = { textColor = Color.green }
-                };
-
-                GUILayout.Label(new GUIContent("多语言文件夹路径(?)", "eg:Assets/GameMain/Localization/"), labelStyle, GUILayout.Width(200));
+                GUILayout.Label(new GUIContent("多语言文件夹路径(?)", "eg:Assets/AAAGame/Localization/"), labelStyle, GUILayout.Width(200));
                 folderPath = EditorGUILayout.TextField(folderPath);
             }
             EditorGUILayout.EndHorizontal();
+
             EditorGUILayout.BeginHorizontal();
             {
-                GUIStyle labelStyle = new GUIStyle(GUI.skin.label)
-                {
-                    fontSize = 12,
-                    fontStyle = FontStyle.Bold
-                };
-
-                GUILayout.Label(new GUIContent("文件保存路径(?)", "eg:/Dictionaries/Default.xml"), labelStyle, GUILayout.Width(200));
-                m_DefaultFilePath = EditorGUILayout.TextField(m_DefaultFilePath);
+                GUILayout.Label(new GUIContent("文件存储路径(?)", "eg:ChineseSimplified"), labelStyle, GUILayout.Width(200));
+                m_FilePath = EditorGUILayout.TextField(m_FilePath);
+                m_FileType = (FileType)EditorGUILayout.EnumPopup(m_FileType, GUILayout.Width(100));
             }
             EditorGUILayout.EndHorizontal();
+
             DrawLanguagePopup();
             EditorGUILayout.Space();
             DrawLocalizationEntry();
@@ -147,6 +200,7 @@ namespace GFTools.LocalizationEditor
             DrawBottomButton();
         }
 
+        private bool otherFoldout = false;
         /// <summary>
         /// 绘制底部按钮
         /// </summary>
@@ -163,7 +217,7 @@ namespace GFTools.LocalizationEditor
           
             if (GUILayout.Button("保存当前", GUILayout.Width(100), GUILayout.Height(30)))
             {
-                SaveToDictionary();
+                SaveToFile();
             }
             if (GUILayout.Button("保存全部", GUILayout.Width(100), GUILayout.Height(30)))
             {
@@ -175,6 +229,21 @@ namespace GFTools.LocalizationEditor
             }
 
             GUILayout.FlexibleSpace();
+
+ 
+            EditorGUILayout.EndHorizontal();
+
+            otherFoldout = EditorGUILayout.Foldout(otherFoldout, new GUIContent("其他设置"));
+
+            EditorGUILayout.BeginHorizontal("box");
+            if(otherFoldout)
+            {
+                SaveWhenClosed = EditorGUILayout.Toggle(new GUIContent("关闭时保存："),SaveWhenClosed);
+                AllowDrag = EditorGUILayout.Toggle(new GUIContent("允许拖拽排序："), AllowDrag);
+                m_ReorderableEntryList.draggable = AllowDrag;
+            }
+         
+
             EditorGUILayout.EndHorizontal();
         }
         /// <summary>
@@ -185,12 +254,12 @@ namespace GFTools.LocalizationEditor
             EditorGUILayout.Space();
             EditorGUILayout.BeginHorizontal("box");
             EditorGUILayout.LabelField("选择语言：", EditorStyles.boldLabel);
-            int newIndex = EditorGUILayout.Popup(m_selectLanguageIndex, m_LanguageTypeList.ToArray(), GUILayout.Width(300f));
+            int newIndex = EditorGUILayout.Popup(SelectLanguageIndex, m_LanguageTypeList.ToArray(), GUILayout.Width(300f));
 
-            if(newIndex !=  m_selectLanguageIndex)
+            if(newIndex !=  SelectLanguageIndex)
             {
-                m_selectLanguageIndex = newIndex;
-                OnPopupLanguageChange(m_selectLanguageIndex);
+                SelectLanguageIndex = newIndex;
+                OnPopupLanguageChange(SelectLanguageIndex);
             }
 
             EditorGUILayout.EndHorizontal();
@@ -230,25 +299,23 @@ namespace GFTools.LocalizationEditor
         private List<LocalizationEntry> LoadLocalizationEntry(string language)
         {
             Dictionary<string,string> keyValuePairs = new Dictionary<string, string>();
-            List<LocalizationEntry> localizationEntries = new List<LocalizationEntry>();
+            List<LocalizationEntry> localizationEntryList = new List<LocalizationEntry>();
             if (string.IsNullOrEmpty(folderPath))
             {
                 Debug.LogWarning("路径为空，无法加载文件。");
                 return null;
             }
-            string fullPath = folderPath + language + m_DefaultFilePath;
-
-            keyValuePairs = LocalizationUtility.ReadXml(fullPath);
-
-            
-            foreach (var pair in keyValuePairs)
+            string fullPath = GetCurrentLanguageFilePath(language);
+            if(!File.Exists(fullPath))
             {
-                localizationEntries.Add(new LocalizationEntry(pair.Key, pair.Value));
+                Debug.LogError(fullPath + " is not exists!");
             }
 
-            m_AllLangguageLocalitionEntry.Add(language, localizationEntries);
+            localizationEntryList = ReadLocalizationEntryList(m_FileType, fullPath);
 
-            return localizationEntries;
+            m_AllLangguageLocalitionEntry.Add(language, localizationEntryList);
+
+            return localizationEntryList;
         }
 
         /// <summary>
@@ -283,7 +350,7 @@ namespace GFTools.LocalizationEditor
             };
 
 
-            m_ReorderableEntryList.draggable = false;
+            m_ReorderableEntryList.draggable = AllowDrag;
             m_ReorderableEntryList.drawElementCallback = (Rect rect, int index, bool isActive, bool isFocused) =>
             {
                 var entry = m_CurEntryList[index];
@@ -400,7 +467,7 @@ namespace GFTools.LocalizationEditor
             if (m_LanguageTypeList == null)
                 m_LanguageTypeList = new List<string>();
 
-            m_LanguageTypeList = LocalizationUtility.GetSubfolderNames(folderPath);
+            m_LanguageTypeList = LocalizationUtility.GetFileNames(folderPath);
     
             reorderableLanguageList = new ReorderableList(m_LanguageTypeList, typeof(string), true, true, true, true);
             reorderableLanguageList.draggable = false;
@@ -500,7 +567,7 @@ namespace GFTools.LocalizationEditor
         /// <summary>
         /// 保存当前本地化文件
         /// </summary>
-        private void SaveToDictionary()
+        private void SaveToFile()
         {
             m_KeyValuePairs = new Dictionary<string, string>();
 
@@ -514,9 +581,7 @@ namespace GFTools.LocalizationEditor
                         Debug.LogWarning($"重复的 Key：{entry.Key}，已跳过。");
                 }
             }
-            string fullPath = folderPath + m_CurLanguage + m_DefaultFilePath;
-
-            LocalizationUtility.WriteXml(m_CurLanguage, fullPath, m_KeyValuePairs);
+            WriteLocalizationEntryList(m_CurLanguage, m_CurEntryList);
             AssetDatabase.Refresh();
         }
 
@@ -524,24 +589,10 @@ namespace GFTools.LocalizationEditor
         /// 保存指定语言的本地化文件
         /// </summary>
         /// <param name="language"></param>
-        private void SaveToDictionary(string language)
+        private void SaveToFile(string language)
         {
-            var keyValuePairs = new Dictionary<string, string>();
-            var localizationEntries = m_AllLangguageLocalitionEntry[language];
-            foreach (var entry in localizationEntries)
-            {
-                if (!string.IsNullOrEmpty(entry.Key))
-                {
-                    if (!keyValuePairs.ContainsKey(entry.Key))
-                        keyValuePairs.Add(entry.Key, entry.Value);
-                    else
-                        Debug.LogWarning($"重复的 Key：{entry.Key}，已跳过。");
-                }
-            }
-            string fullPath = folderPath + language + m_DefaultFilePath;
-
-            LocalizationUtility.WriteXml(language, fullPath, keyValuePairs);
-
+            var localizationEntryList = m_AllLangguageLocalitionEntry[language];
+            WriteLocalizationEntryList(language, localizationEntryList);
         }
 
         /// <summary>
@@ -551,7 +602,7 @@ namespace GFTools.LocalizationEditor
         {
             foreach (var lang in m_LanguageTypeList)
             {
-                SaveToDictionary(lang);
+                SaveToFile(lang);
             }
 
             AssetDatabase.Refresh();
@@ -570,7 +621,45 @@ namespace GFTools.LocalizationEditor
             }
             return newList;
         }
+
+        private string GetCurrentLanguageFilePath(string language)
+        {
+            if(string.IsNullOrEmpty(language))
+            {
+                language = m_LanguageTypeList[m_selectLanguageIndex];
+            }
+            return folderPath + language + LocalizationUtility.GetSuffixByFileType(m_FileType);
+        }
+
+        private List<LocalizationEntry> ReadLocalizationEntryList(FileType fileType,string filePath)
+        {
+            switch (fileType)
+            {
+                case FileType.Xml:
+                    return LocalizationUtility.ReadXml(filePath);
+                case FileType.Json:
+                    return LocalizationUtility.ReadJson(filePath);
+                default:
+                    return new List<LocalizationEntry>();
+            }
+        }
+
+        private void WriteLocalizationEntryList(string language, List<LocalizationEntry> localizationEntryList)
+        {
+            string fullPath = GetCurrentLanguageFilePath(language);
+
+            switch (m_FileType)
+            {
+                case FileType.Xml:
+                    LocalizationUtility.WriteXml(language, fullPath, localizationEntryList);
+                    break;
+                case FileType.Json:
+                    LocalizationUtility.WriteJson(fullPath, localizationEntryList);
+                    break;
+                default:
+                    break;
+            }
+        }
     }
 
 }
-
